@@ -1,0 +1,2 @@
+python-socketio[client]==4.6.1
+load_dotenv
