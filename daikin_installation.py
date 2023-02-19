@@ -7,7 +7,7 @@ from daikin_device import DaikinDevice
 class DaikinInstallation:
     """Class for interacting with an installation"""
 
-    sio: socketio.Client
+    installation_socket: socketio.Client
     api: any
     installation_id: str
     devices: dict[str, DaikinDevice]
@@ -18,41 +18,41 @@ class DaikinInstallation:
         self.devices = []
         self.installation_id = installation_data["_id"]
         self.devices: dict[str, DaikinDevice] = {}
-        self.sio = socketio.Client()
+        self.installation_socket = socketio.Client()
         for d in installation_data["devices"]:
-            self.devices[d["name"]] = DaikinDevice(d, self.sio)
+            self.devices[d["name"]] = DaikinDevice(d, self.installation_socket)
         logger.debug("Set up installation '%s'", self.installation_id)
 
     def connect_installation_socket(self):
         """starts the Socket.IO connection for the provided installation"""
 
-        @self.sio.on("*")
+        @self.installation_socket.on("*")
         def catch_all(event, data):
             """Default event handler"""
             logger.debug(
-                "Received SocketIO message '%s': %s",
+                "Installation socket message '%s': %s",
                 json.dumps(event),
                 json.dumps(data),
             )
 
-        @self.sio.event
+        @self.installation_socket.event
         def connect():
-            """SIO Connect callback"""
-            print("I'm connected!")
+            """installation_socket Connect callback"""
+            logger.debug("Installation socket connected!")
 
-        @self.sio.event
+        @self.installation_socket.event
         def connect_error(data):
-            """SIO Connect Error callback"""
-            print("The connection failed!")
+            """installation_socket Connect Error callback"""
+            logger.debug("Installation socket connection failed!")
 
-        @self.sio.event
+        @self.installation_socket.event
         def disconnect():
-            """SIO Disonnect callback"""
-            print("I'm disconnected!")
+            """installation_socket Disonnect callback"""
+            logger.debug("Installation socketdisconnected!")
 
         url = f"{self.api.PROD_URL}{self.installation_id}::{self.api.SCOPE}"
-        logger.debug("Starting Socket.IO connection: %s", url)
-        self.sio.connect(
+        logger.debug("Starting : %s", url)
+        self.installation_socket.connect(
             url,
             transports=["polling"],
             socketio_path=self.api.SOCKET_PATH,

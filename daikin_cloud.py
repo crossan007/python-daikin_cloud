@@ -67,17 +67,17 @@ class DaikinCloud:
         @self.user_socket.event
         def connect():
             """SIO Connect callback"""
-            print("I'm connected!")
+            logger.debug("I'm connected!")
 
         @self.user_socket.event
         def connect_error(data):
             """SIO Connect Error callback"""
-            print("The connection failed!")
+            logger.debug("The connection failed!")
 
         @self.user_socket.event
         def disconnect():
             """SIO Disonnect callback"""
-            print("I'm disconnected!")
+            logger.debug("I'm disconnected!")
 
         url = f"{self.api.PROD_URL}users"
         logger.debug("Starting Socket.IO connection: %s", url)

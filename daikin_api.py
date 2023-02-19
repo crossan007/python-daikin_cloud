@@ -5,8 +5,9 @@ from typing_extensions import TypedDict
 
 APITokens = TypedDict("APITokens", {"access_token": str, "refresh_token": str})
 
-
 # TODO:self.authHeader = headers["Authorization"] in charles_dev/tmp/site-packages/engineio/client.py
+
+
 class DaikinAPI:
     """Commands for interacting with REST and Socket.IO"""
 
