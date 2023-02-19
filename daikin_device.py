@@ -1,5 +1,5 @@
 """Module: """
-import logging
+from logger import logger
 import socketio
 
 
@@ -18,7 +18,7 @@ class DaikinDevice:
         self.icon = device_data["icon"]
         self.mac = device_data["mac"]
         self.sio = sio
-        logging.debug("Setup device %s - %s", self.name, self.mac)
+        logger.debug("Setup device %s - %s", self.name, self.mac)
 
     def set_device_value(self, prop: str, value: str):
         """Sets a device value using the installation socket"""
@@ -26,7 +26,7 @@ class DaikinDevice:
         update_command = {"mac": self.mac, "property": prop, "value": value}
 
         def callback_fun():
-            logging.debug(
+            logger.debug(
                 "(%s) POST - %s : %s",
                 update_command["mac"],
                 update_command["property"],

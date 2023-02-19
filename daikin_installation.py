@@ -1,9 +1,8 @@
 """Module: """
 import json
-import logging
+from logger import logger
 import socketio
 from daikin_device import DaikinDevice
-
 
 class DaikinInstallation:
     """Class for interacting with an installation"""
@@ -20,18 +19,17 @@ class DaikinInstallation:
         self.installation_id = installation_data["_id"]
         self.devices: dict[str, DaikinDevice] = {}
         self.sio = socketio.Client()
-        self.connect_installation_socket(self.installation_id)
         for d in installation_data["devices"]:
             self.devices[d["name"]] = DaikinDevice(d, self.sio)
-        logging.debug("Set up installation '%s'", self.installation_id)
+        logger.debug("Set up installation '%s'", self.installation_id)
 
-    def connect_installation_socket(self, installation_id: str):
+    def connect_installation_socket(self):
         """starts the Socket.IO connection for the provided installation"""
 
-        @self.sio.on("")
+        @self.sio.on("*")
         def catch_all(event, data):
             """Default event handler"""
-            logging.debug(
+            logger.debug(
                 "Received SocketIO message '%s': %s",
                 json.dumps(event),
                 json.dumps(data),
@@ -52,8 +50,8 @@ class DaikinInstallation:
             """SIO Disonnect callback"""
             print("I'm disconnected!")
 
-        url = f"{self.api.PROD_URL}{self.api.API_VERSION}{installation_id}::{self.api.SCOPE}"
-        logging.debug("Starting Socket.IO connection: %s", url)
+        url = f"{self.api.PROD_URL}{self.installation_id}::{self.api.SCOPE}"
+        logger.debug("Starting Socket.IO connection: %s", url)
         self.sio.connect(
             url,
             transports=["polling"],

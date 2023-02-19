@@ -1,11 +1,7 @@
-import json
-import logging
-import os
-import socketio
+"""Daikin API class"""
+from logger import logger
 import requests
-from dotenv import load_dotenv
 from typing_extensions import TypedDict
-
 
 APITokens = TypedDict("APITokens", {"access_token": str, "refresh_token": str})
 
@@ -39,7 +35,7 @@ class DaikinAPI:
         """Proxy api post method."""
         headers = self.build_headers(headers, auth)
         url = f"{self.PROD_URL}{self.API_VERSION}{subpath}"
-        logging.debug("API POST to %s", url)
+        logger.debug("API POST to %s", url)
         request = requests.post(
             url,
             headers=headers,
@@ -52,7 +48,7 @@ class DaikinAPI:
         """Proxy api get method."""
         headers = self.build_headers(headers, auth)
         url = f"{self.PROD_URL}{self.API_VERSION}{subpath}"
-        logging.debug("API GET to %s", url)
+        logger.debug("API GET to %s", url)
         request = requests.get(
             url,
             headers=headers,
@@ -63,7 +59,7 @@ class DaikinAPI:
     def login_pasword(self, email: str, password: str):
         """Logs in and gets a token / refreshtoken."""
         if "access_token" in self.api_tokens and self.api_tokens["access_token"]:
-            logging.debug("Already logged in")
+            logger.debug("Already logged in")
             return
 
         if email is None:
@@ -72,7 +68,7 @@ class DaikinAPI:
             raise ValueError("No password")
 
         login_path = f"auth/login/{self.SCOPE}"
-        logging.debug("Logging in")
+        logger.debug("logger in")
         response = self.post(
             login_path, body={"email": email, "password": password}, auth=False
         )
@@ -80,7 +76,7 @@ class DaikinAPI:
             "access_token": response["token"],
             "refresh_token": response["refreshToken"],
         }
-        logging.debug("Login Success")
+        logger.debug("Login Success")
         return {
             "profile": response["data"],
             "installations": response["scope"][self.SCOPE]["installations"],
@@ -99,10 +95,10 @@ class DaikinAPI:
         response = self.get(
             f"auth/refreshToken/{self.api_tokens['refresh_token']}/{self.SCOPE}"
         )
-        logging.debug(
+        logger.debug(
             "Updating access token using refresh token %s",
             self.api_tokens["refresh_token"],
         )
         self.api_tokens["access_token"] = response["token"]
         self.api_tokens["refresh_token"] = response["refreshToken"]
-        logging.debug("Token refresh success")
+        logger.debug("Token refresh success")
