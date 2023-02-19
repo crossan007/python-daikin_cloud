@@ -59,9 +59,9 @@ class DaikinAPI:
 
     def login_pasword(self, email: str, password: str):
         """Logs in and gets a token / refreshtoken."""
-        if "access_token" in self.api_tokens and self.api_tokens["access_token"]:
-            logger.debug("Already logged in")
-            return
+        # if "access_token" in self.api_tokens and self.api_tokens["access_token"]:
+        # logger.debug("Already logged in")
+        # return
 
         if email is None:
             raise ValueError("No email address")
@@ -69,7 +69,7 @@ class DaikinAPI:
             raise ValueError("No password")
 
         login_path = f"auth/login/{self.SCOPE}"
-        logger.debug("logger in")
+        logger.debug("logging in")
         response = self.post(
             login_path, body={"email": email, "password": password}, auth=False
         )

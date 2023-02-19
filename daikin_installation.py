@@ -53,11 +53,16 @@ class DaikinInstallation:
             logger.debug("Installation socketdisconnected!")
 
         url = f"{self.api.API_URL}"
-        logger.debug("Starting installation socket: %s", url)
+        installation_namespace = f"{self.installation_id}::{self.api.SCOPE}"
+        logger.debug(
+            "Starting installation socket: %s; namespace: '%s'",
+            url,
+            installation_namespace,
+        )
         self.installation_socket.connect(
             url,
             transports=["polling"],
-            namespaces=[f"{self.installation_id}::{self.api.SCOPE}"],
+            namespaces=[installation_namespace],
             socketio_path=self.api.SOCKET_PATH,
             headers={"Authorization": f"Bearer {self.api.api_tokens['access_token']}"},
         )

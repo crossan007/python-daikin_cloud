@@ -23,6 +23,7 @@ class DaikinCloud:
             os.environ.get("daikin_email"), os.environ.get("daikin_password")
         )
         self.save_environment()
+        return
         logger.debug("Got data %s", json.dumps(response))
         self.fetch_installations()
         self.connect_user_socket()
@@ -55,6 +56,10 @@ class DaikinCloud:
     def connect_user_socket(self):
         """connects the user socket"""
 
+        @self.user_socket.event(namespace="/users")
+        def message(data):
+            logger.debug("User socket event: '%s'", json.dumps(data))
+
         @self.user_socket.on("*", namespace="/users")
         def catch_all(event, data):
             """Default event handler"""
@@ -64,18 +69,18 @@ class DaikinCloud:
                 json.dumps(data),
             )
 
-        @self.user_socket.event
-        def connect(namespace="/users"):
+        @self.user_socket.event(namespace="/users")
+        def connect():
             """SIO Connect callback"""
             logger.debug("User socket connected!")
 
-        @self.user_socket.event
-        def connect_error(data, namespace="/users"):
+        @self.user_socket.event(namespace="/users")
+        def connect_error(data):
             """SIO Connect Error callback"""
             logger.debug("User socket connection failed!")
 
-        @self.user_socket.event
-        def disconnect(namespace="/users"):
+        @self.user_socket.event(namespace="/users")
+        def disconnect():
             """SIO Disonnect callback"""
             logger.debug("User socket disconnected!")
 

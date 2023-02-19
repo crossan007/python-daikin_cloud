@@ -12,10 +12,6 @@ installation_ids = list(d.installations.keys())
 iid = installation_ids[0]
 installation = d.installations[iid]
 
-
-installation.connect_installation_socket()
-
-
 device = installation.devices["Home"]
 logger.debug(device)
 
