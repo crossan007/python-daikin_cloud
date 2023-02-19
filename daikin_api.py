@@ -13,7 +13,7 @@ class DaikinAPI:
 
     api_tokens: APITokens
     timeout_seconds = 5
-    PROD_URL = "https://dkncloudna.com/"
+    API_URL = "https://dkncloudna.com/"
     API_VERSION = "api/v1/"
     SCOPE = "dknUsa"
     SOCKET_PATH = "/api/v1/devices/socket.io/"
@@ -35,7 +35,7 @@ class DaikinAPI:
     ):
         """Proxy api post method."""
         headers = self.build_headers(headers, auth)
-        url = f"{self.PROD_URL}{self.API_VERSION}{subpath}"
+        url = f"{self.API_URL}{self.API_VERSION}{subpath}"
         logger.debug("API POST to %s", url)
         request = requests.post(
             url,
@@ -48,7 +48,7 @@ class DaikinAPI:
     def get(self, subpath: str, headers: dict = None, auth: bool = True):
         """Proxy api get method."""
         headers = self.build_headers(headers, auth)
-        url = f"{self.PROD_URL}{self.API_VERSION}{subpath}"
+        url = f"{self.API_URL}{self.API_VERSION}{subpath}"
         logger.debug("API GET to %s", url)
         request = requests.get(
             url,

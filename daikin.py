@@ -5,8 +5,6 @@ from logger import logger
 logger.debug("Loading environment")
 load_dotenv()
 
-exit()
-
 logger.debug("Initializing DaikinCloud")
 d = DaikinCloud()
 

@@ -55,34 +55,35 @@ class DaikinCloud:
     def connect_user_socket(self):
         """connects the user socket"""
 
-        @self.user_socket.on("*")
+        @self.user_socket.on("*", namespace="/users")
         def catch_all(event, data):
             """Default event handler"""
             logger.debug(
-                "Received SocketIO message '%s': %s",
+                "User socket message '%s': %s",
                 json.dumps(event),
                 json.dumps(data),
             )
 
         @self.user_socket.event
-        def connect():
+        def connect(namespace="/users"):
             """SIO Connect callback"""
-            logger.debug("I'm connected!")
+            logger.debug("User socket connected!")
 
         @self.user_socket.event
-        def connect_error(data):
+        def connect_error(data, namespace="/users"):
             """SIO Connect Error callback"""
-            logger.debug("The connection failed!")
+            logger.debug("User socket connection failed!")
 
         @self.user_socket.event
-        def disconnect():
+        def disconnect(namespace="/users"):
             """SIO Disonnect callback"""
-            logger.debug("I'm disconnected!")
+            logger.debug("User socket disconnected!")
 
-        url = f"{self.api.PROD_URL}users"
-        logger.debug("Starting Socket.IO connection: %s", url)
+        url = f"{self.api.API_URL}"
+        logger.debug("Starting user socket: %s", url)
         self.user_socket.connect(
             url,
+            namespaces=["/users"],
             transports=["polling"],
             socketio_path=self.api.SOCKET_PATH,
             headers={"Authorization": f"Bearer {self.api.api_tokens['access_token']}"},

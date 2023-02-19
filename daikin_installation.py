@@ -3,12 +3,14 @@ import json
 from logger import logger
 import socketio
 from daikin_device import DaikinDevice
+from daikin_api import DaikinAPI
+
 
 class DaikinInstallation:
     """Class for interacting with an installation"""
 
     installation_socket: socketio.Client
-    api: any
+    api: DaikinAPI
     installation_id: str
     devices: dict[str, DaikinDevice]
 
@@ -50,11 +52,12 @@ class DaikinInstallation:
             """installation_socket Disonnect callback"""
             logger.debug("Installation socketdisconnected!")
 
-        url = f"{self.api.PROD_URL}{self.installation_id}::{self.api.SCOPE}"
-        logger.debug("Starting : %s", url)
+        url = f"{self.api.API_URL}"
+        logger.debug("Starting installation socket: %s", url)
         self.installation_socket.connect(
             url,
             transports=["polling"],
+            namespaces=[f"{self.installation_id}::{self.api.SCOPE}"],
             socketio_path=self.api.SOCKET_PATH,
             headers={"Authorization": f"Bearer {self.api.api_tokens['access_token']}"},
         )
