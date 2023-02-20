@@ -10,6 +10,5 @@ ch.setFormatter(formatter)
 logger.addHandler(ch)
 logger.debug("Logger Initialized")
 
-logging.basicConfig(
-    level=logging.NOTSET
-)  # Uncomment this line to show all module logs too
+if False:
+    logging.basicConfig(level=logging.NOTSET)

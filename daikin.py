@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 from daikin_cloud import DaikinCloud
 from logger import logger
+import time
 
 logger.debug("Loading environment")
 load_dotenv()
@@ -15,6 +16,9 @@ installation = d.installations[iid]
 device = installation.devices["Home"]
 logger.debug(device)
 
-# device.set_device_value("power", 0)
+
+time.sleep(2.4)
+
+device.set_device_value("setpoint_air_heat", 72)
 
 # d.set_device_value(installation, update_command)

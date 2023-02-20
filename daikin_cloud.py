@@ -23,7 +23,6 @@ class DaikinCloud:
             os.environ.get("daikin_email"), os.environ.get("daikin_password")
         )
         self.save_environment()
-        return
         logger.debug("Got data %s", json.dumps(response))
         self.fetch_installations()
         self.connect_user_socket()
@@ -60,7 +59,7 @@ class DaikinCloud:
         def message(data):
             logger.debug("User socket event: '%s'", json.dumps(data))
 
-        @self.user_socket.on("*", namespace="/users")
+        @self.user_socket.on("*")
         def catch_all(event, data):
             """Default event handler"""
             logger.debug(
