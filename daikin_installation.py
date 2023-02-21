@@ -4,12 +4,13 @@ from logger import logger
 import socketio
 from daikin_device import DaikinDevice
 from daikin_api import DaikinAPI
+from daikin_device_data import DeviceDataMessage
 
 
 class DaikinInstallation:
     """Class for interacting with an installation"""
 
-    installation_socket: socketio.Client
+    installation_socket: socketio.AsyncClient
     api: DaikinAPI
     installation_id: str
     devices: dict[str, DaikinDevice]
@@ -22,11 +23,9 @@ class DaikinInstallation:
         self.installation_id = installation_data["_id"]
         self.devices: dict[str, DaikinDevice] = {}
         self.installation_namespace = f"/{self.installation_id}::{self.api.SCOPE}"
-        self.installation_socket = socketio.Client()
+        self.installation_socket = socketio.AsyncClient()
         for d in installation_data["devices"]:
-            self.devices[d["name"]] = DaikinDevice(
-                d, self.installation_socket, self.installation_namespace
-            )
+            self.devices[d["mac"]] = DaikinDevice(d, self)
             logger.debug(
                 "Set up device '%s':'%s' in installation '%s'",
                 d["name"],
@@ -35,9 +34,13 @@ class DaikinInstallation:
             )
         logger.debug("Set up installation '%s'", self.installation_id)
 
-        self.connect_installation_socket()
+    async def emit(self, event, data, callback):
+        """Proxies the Socket.IO emit but includes this installation's namespace"""
+        await self.installation_socket.emit(
+            event, data, namespace=self.installation_namespace, callback=callback
+        )
 
-    def connect_installation_socket(self):
+    async def connect_installation_socket(self):
         """starts the Socket.IO connection for the provided installation"""
 
         url = f"{self.api.API_URL}"
@@ -48,7 +51,7 @@ class DaikinInstallation:
             url,
             self.installation_namespace,
         )
-        self.installation_socket.connect(
+        await self.installation_socket.connect(
             url,
             transports=["polling"],
             namespaces=[self.installation_namespace],
@@ -69,7 +72,17 @@ class DaikinInstallation:
             "device-data", namespace=self.installation_namespace
         )
         def on_device_data(data):
-            logger.debug("Got device data:  %s", json.dumps(data))
+            device_data_message: DeviceDataMessage = DeviceDataMessage.from_dict(data)
+            try:
+                self.devices[device_data_message.mac].handle_device_data(
+                    device_data_message.data
+                )
+            except KeyError:
+                logger.warning(
+                    "Device '%s' does not exist in installation '%s'",
+                    device_data_message.mac,
+                    self.installation_id,
+                )
 
         @self.installation_socket.event(namespace=self.installation_namespace)
         def message(data):
@@ -78,7 +91,10 @@ class DaikinInstallation:
         @self.installation_socket.event
         def connect():
             """installation_socket Connect callback"""
-            logger.debug("Installation socket connected!")
+            logger.debug(
+                "Installation socket connected: '%s'",
+                self.installation_namespace,
+            )
 
         @self.installation_socket.event
         def connect_error(data):

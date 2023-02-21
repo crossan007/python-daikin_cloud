@@ -1,10 +1,22 @@
-"""Module"""
+"""
+Module
+
+TODO: Figure out dependency import paths
+using sys.path.append("/workspaces/core/charles_dev") isn't goning to work for prod
+
+
+"""
+import sys
+
+sys.path.append("/workspaces/core/charles_dev")
 import json
 from logger import logger
 import os
 import socketio
 from daikin_api import DaikinAPI
 from daikin_installation import DaikinInstallation
+from daikin_device import DaikinDevice
+from daikin_profile import DaikinProfile
 
 
 class DaikinCloud:
@@ -13,19 +25,32 @@ class DaikinCloud:
     data_file = "tmp/daikin.json"
     api: DaikinAPI
     installations: dict[str, DaikinInstallation]
-    user_socket: socketio.Client
+    devices: list[DaikinDevice]
+    user_socket: socketio.AsyncClient
+    profile: DaikinProfile
 
     def __init__(self) -> None:
         self.api = DaikinAPI()
-        self.user_socket = socketio.Client()
+        self.user_socket = socketio.AsyncClient()
+        self.devices = []
+
+    async def after_login(self):
+        await self.fetch_installations()
+        await self.connect_user_socket()
+
+    async def login_dev(self):
         self.load_environment()
-        response = self.api.login_pasword(
-            os.environ.get("daikin_email"), os.environ.get("daikin_password")
-        )
+        email = os.environ.get("daikin_email")
+        password = os.environ.get("daikin_password")
+        response = await self.api.login_pasword(email, password)
+        self.profile = response["profile"]
         self.save_environment()
-        logger.debug("Got data %s", json.dumps(response))
-        self.fetch_installations()
-        self.connect_user_socket()
+        await self.after_login()
+
+    async def login(self, email: str, password: str):
+        response = await self.api.login_pasword(email, password)
+        self.profile = response["profile"]
+        await self.after_login()
 
     def load_environment(self):
         """Loads tokens from OS environment variables; useful for REPL."""
@@ -44,15 +69,18 @@ class DaikinCloud:
             json.dump({"tokens": self.api.get_tokens()}, write_file)
         logger.debug("Saved tokens to environment")
 
-    def fetch_installations(self):
+    async def fetch_installations(self):
         """Gets installations available to the current user."""
         logger.debug("Getting installations")
-        response = self.api.get(f"installations/{self.api.SCOPE}")
+        response = await self.api.get(f"installations/{self.api.SCOPE}")
         self.installations: dict[str, DaikinInstallation] = {}
         for i in response:
-            self.installations[i["_id"]] = DaikinInstallation(self.api, i)
+            thisInstallation = DaikinInstallation(self.api, i)
+            await thisInstallation.connect_installation_socket()
+            self.installations[i["_id"]] = thisInstallation
+            self.devices.extend(thisInstallation.devices.values())
 
-    def connect_user_socket(self):
+    async def connect_user_socket(self):
         """connects the user socket"""
 
         @self.user_socket.event(namespace="/users")
@@ -85,7 +113,7 @@ class DaikinCloud:
 
         url = f"{self.api.API_URL}"
         logger.debug("Starting user socket: %s", url)
-        self.user_socket.connect(
+        await self.user_socket.connect(
             url,
             namespaces=["/users"],
             transports=["polling"],
