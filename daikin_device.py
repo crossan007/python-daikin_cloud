@@ -21,7 +21,7 @@ class DaikinDevice:
     acs_mode: bool
     installation: DaikinInstallation
     device_data: DeviceData
-    on_data_updated: Callable[[]]
+    on_data_updated: list[Callable[[]]]
 
     def __init__(self, device_data: any, installation: DaikinInstallation) -> None:
         self.acs_mode = False
@@ -30,6 +30,7 @@ class DaikinDevice:
         self.mac = device_data["mac"]
         self.installation = installation
         self.device_data = DeviceData()
+        self.on_data_updated = []
         logger.debug("Setup device %s - %s", self.name, self.mac)
 
     async def set_device_value(self, prop: str, value: str):
@@ -51,10 +52,11 @@ class DaikinDevice:
         await self.installation.emit(
             "create-machine-event", update_command, callback=callback_fun
         )
+        setattr(self.device_data, prop, value)
 
-    def set_update_callback(self, callback: Callable[[]]):
+    def add_update_callback(self, callback: Callable[[]]):
         """Updates the callback and then calls it"""
-        self.on_data_updated = callback
+        self.on_data_updated.append(callback)
         self._invoke_callback()
 
     def handle_device_data(self, data: DeviceData):
@@ -74,8 +76,13 @@ class DaikinDevice:
                 self._invoke_callback()
 
     def _invoke_callback(self):
-        try:
-            logger.debug("Notifying on_data_updated callback of changes")
-            self.on_data_updated()
-        except Exception:
-            logger.exception("Failed to execute callback")
+        if self.on_data_updated.__len__ == 0:
+            logger.debug("No callbacks registered")
+            return
+
+        logger.debug("Notifying al on_data_updated callbacks of changes")
+        for callback in self.on_data_updated:
+            try:
+                callback()
+            except Exception:
+                logger.exception("Failed to execute a callback")
