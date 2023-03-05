@@ -1,0 +1,23 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+
+[project]
+name = "daikin_cloud"
+version = "0.1.0"
+authors = [
+  { name="Charles Crossan", email="crossan007@gmail.com" },
+]
+description = "A set of Python classes to interact with and control Daikin HVAC units associated with a DKNOne / Daikin Cloud NA account"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/crossan007/python-daikin_cloud"
+"Bug Tracker" = "https://github.com/crossan007/python-daikin_cloud/issues"

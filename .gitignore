@@ -1,3 +1,4 @@
 tmp*
 .env
 __pycache__
+dist*
