@@ -2,6 +2,7 @@
 import json
 from logger import logger
 import socketio
+import aiohttp
 from daikin_device import DaikinDevice
 from daikin_api import DaikinAPI
 from daikin_device_data import DeviceDataMessage
@@ -23,7 +24,9 @@ class DaikinInstallation:
         self.installation_id = installation_data["_id"]
         self.devices: dict[str, DaikinDevice] = {}
         self.installation_namespace = f"/{self.installation_id}::{self.api.SCOPE}"
-        self.installation_socket = socketio.AsyncClient()
+
+        session = aiohttp.ClientSession(headers = {"Authorization": f"Bearer {self.api.api_tokens['access_token']}"});
+        self.installation_socket = socketio.AsyncClient(http_session=session)
         for d in installation_data["devices"]:
             self.devices[d["mac"]] = DaikinDevice(d, self)
             logger.debug(

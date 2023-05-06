@@ -13,11 +13,11 @@ import json
 from logger import logger
 import os
 import socketio
+import aiohttp
 from daikin_api import DaikinAPI
 from daikin_installation import DaikinInstallation
 from daikin_device import DaikinDevice
 from daikin_profile import DaikinProfile
-
 
 class DaikinCloud:
     """Methods to interact with the Daikin One API."""
@@ -31,10 +31,12 @@ class DaikinCloud:
 
     def __init__(self) -> None:
         self.api = DaikinAPI()
-        self.user_socket = socketio.AsyncClient()
         self.devices = []
 
     async def after_login(self):
+        session = aiohttp.ClientSession(headers = {"Authorization": f"Bearer {self.api.api_tokens['access_token']}"});
+        self.user_socket = socketio.AsyncClient(http_session=session)
+
         await self.fetch_installations()
         await self.connect_user_socket()
 
